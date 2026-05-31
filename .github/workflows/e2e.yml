@@ -1,0 +1,60 @@
+name: e2e
+
+# End-to-end tests for resilient-pubsub, consumed as a git dependency and
+# exercised against the Google Cloud Pub/Sub emulator.
+#
+# The emulator runs as a service container (messagebird/gcloud-pubsub-emulator,
+# listening on 8681). Tests create their own topics and subscriptions on the
+# emulator, so no pre-seeded topology is required.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+
+    services:
+      pubsub:
+        image: messagebird/gcloud-pubsub-emulator:latest
+        ports:
+          - 8681:8681
+
+    steps:
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66ddda # v4.1.0
+        with:
+          version: 11
+
+      - name: Setup Node.js
+        uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v4.1.0
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --no-frozen-lockfile
+
+      - name: Wait for Pub/Sub emulator
+        shell: bash
+        run: |
+          for i in $(seq 1 30); do
+            if nc -z localhost 8681; then echo "emulator up"; exit 0; fi
+            echo "waiting for emulator..."; sleep 2
+          done
+          echo "emulator did not start"; exit 1
+
+      - name: Type check
+        run: pnpm typecheck
+
+      - name: Run e2e tests
+        run: pnpm test
+        env:
+          PUBSUB_EMULATOR_HOST: localhost:8681
+          PROJECT_ID: e2e-project
+          GOOGLE_CLOUD_PROJECT: e2e-project
