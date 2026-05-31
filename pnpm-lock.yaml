@@ -12,8 +12,8 @@ importers:
         specifier: ^5.3.0
         version: 5.3.0
       resilient-pubsub:
-        specifier: github:valianx/resilient-pubsub#0003e7bc9e2ca85455bf75973d269f9bc73364e0
-        version: https://codeload.github.com/valianx/resilient-pubsub/tar.gz/0003e7bc9e2ca85455bf75973d269f9bc73364e0(@google-cloud/pubsub@5.3.0)
+        specifier: github:valianx/resilient-pubsub#de036badb4cd5e40c09cf517ce86abc74d85c24e
+        version: https://codeload.github.com/valianx/resilient-pubsub/tar.gz/de036badb4cd5e40c09cf517ce86abc74d85c24e(@google-cloud/pubsub@5.3.0)
     devDependencies:
       '@types/node':
         specifier: ^22.0.0
@@ -901,8 +901,8 @@ packages:
     resolution: {integrity: sha512-fGxEI7+wsG9xrvdjsrlmL22OMTTiHRwAMroiEeMgq8gzoLC/PQr7RsRDSTLUg/bZAZtF+TVIkHc6/4RIKrui+Q==}
     engines: {node: '>=0.10.0'}
 
-  resilient-pubsub@https://codeload.github.com/valianx/resilient-pubsub/tar.gz/0003e7bc9e2ca85455bf75973d269f9bc73364e0:
-    resolution: {gitHosted: true, integrity: sha512-BxOz831EnDJuGUyxYdiJo4KsORZzrzdoVoPLDjCipXuZ5dAN9YGObyOsWQR6UiemsT9F+vzqLqK2YKwSzwaD7A==, tarball: https://codeload.github.com/valianx/resilient-pubsub/tar.gz/0003e7bc9e2ca85455bf75973d269f9bc73364e0}
+  resilient-pubsub@https://codeload.github.com/valianx/resilient-pubsub/tar.gz/de036badb4cd5e40c09cf517ce86abc74d85c24e:
+    resolution: {gitHosted: true, integrity: sha512-fX0sRo4wnB/BfftvUsvc8Qr8rbCVb9z1ZYLPIynU34wnDKhCFqxvW2nwkQ6hS4UjIr+AWja4grt9qRpdM4ZMcA==, tarball: https://codeload.github.com/valianx/resilient-pubsub/tar.gz/de036badb4cd5e40c09cf517ce86abc74d85c24e}
     version: 0.0.0
     engines: {node: '>=24.0.0', pnpm: '>=9'}
     peerDependencies:
@@ -1840,7 +1840,7 @@ snapshots:
 
   require-directory@2.1.1: {}
 
-  resilient-pubsub@https://codeload.github.com/valianx/resilient-pubsub/tar.gz/0003e7bc9e2ca85455bf75973d269f9bc73364e0(@google-cloud/pubsub@5.3.0):
+  resilient-pubsub@https://codeload.github.com/valianx/resilient-pubsub/tar.gz/de036badb4cd5e40c09cf517ce86abc74d85c24e(@google-cloud/pubsub@5.3.0):
     dependencies:
       '@google-cloud/pubsub': 5.3.0
 
