@@ -3,9 +3,17 @@ name: e2e
 # End-to-end tests for resilient-pubsub, consumed as a git dependency and
 # exercised against the Google Cloud Pub/Sub emulator.
 #
-# The emulator runs as a service container (messagebird/gcloud-pubsub-emulator,
-# listening on 8681). Tests create their own topics and subscriptions on the
-# emulator, so no pre-seeded topology is required.
+# The emulator runs as a background Docker container using the OFFICIAL
+# google-cloud-cli emulators image with its documented start command
+# (`gcloud beta emulators pubsub start`). It must be a `docker run` step rather
+# than a `services:` container because the official image's default command is a
+# shell, not the emulator — `services:` cannot override the command, so the
+# emulator would never start. (The community messagebird image opened the TCP
+# port but its gRPC service did not respond, so every admin/publish call hung and
+# the vitest worker was SIGTERM'd with no test output.)
+#
+# Tests create their own topics and subscriptions, so no pre-seeded topology is
+# required.
 
 on:
   push:
@@ -13,21 +21,27 @@ on:
   pull_request:
   workflow_dispatch:
 
+env:
+  PUBSUB_EMULATOR_HOST: localhost:8085
+  PROJECT_ID: e2e-project
+  GOOGLE_CLOUD_PROJECT: e2e-project
+
 jobs:
   e2e:
     runs-on: ubuntu-latest
-
-    services:
-      pubsub:
-        image: messagebird/gcloud-pubsub-emulator:latest
-        ports:
-          - 8681:8681
+    timeout-minutes: 15
 
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
 
-      # pnpm version is taken from the "packageManager" field in package.json.
-      # Do NOT also set `version:` here — pnpm/action-setup errors on a mismatch.
+      - name: Start Pub/Sub emulator (official cloud-cli image)
+        run: |
+          docker run -d --name pubsub-emulator -p 8085:8085 \
+            gcr.io/google.com/cloudsdktool/google-cloud-cli:emulators \
+            gcloud beta emulators pubsub start \
+              --host-port=0.0.0.0:8085 \
+              --project=e2e-project
+
       - name: Setup pnpm
         uses: pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66ddda # v4.1.0
 
@@ -43,18 +57,25 @@ jobs:
       - name: Wait for Pub/Sub emulator
         shell: bash
         run: |
-          for i in $(seq 1 30); do
-            if nc -z localhost 8681; then echo "emulator up"; exit 0; fi
-            echo "waiting for emulator..."; sleep 2
+          echo "Waiting for the emulator to serve on :8085 ..."
+          for i in $(seq 1 60); do
+            if nc -z localhost 8085; then
+              echo "port open; giving the gRPC server a moment to be ready"
+              sleep 5
+              exit 0
+            fi
+            echo "  attempt $i/60 — sleeping 2s"; sleep 2
           done
-          echo "emulator did not start"; exit 1
+          echo "emulator did not open port 8085; container logs:" >&2
+          docker logs pubsub-emulator || true
+          exit 1
 
       - name: Type check
         run: pnpm typecheck
 
       - name: Run e2e tests
         run: pnpm test
-        env:
-          PUBSUB_EMULATOR_HOST: localhost:8681
-          PROJECT_ID: e2e-project
-          GOOGLE_CLOUD_PROJECT: e2e-project
+
+      - name: Emulator logs on failure
+        if: failure()
+        run: docker logs pubsub-emulator || true
